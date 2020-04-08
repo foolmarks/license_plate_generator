@@ -13,7 +13,7 @@ Command line options
   + --image_format : jpg = JPEG images, png = PNG images
   + --num_images   : Number of images created
 
-Images should look like this:
+Images should look like this with default options:
 
 
 
