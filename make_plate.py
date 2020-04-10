@@ -32,19 +32,12 @@ def gen_images(mode,image_scale,image_dir,image_list,num_images,image_format):
     # Italian plates don't use these letters
     unused = ['i','o','u','q']
 
-    # whitespace between characters
-    spacer=np.empty(shape=(300,34,3),dtype=np.uint8)
-    spacer.fill(255)
-
-    # whitespace between second letters and first number
-    blank=np.empty(shape=(300,120,3),dtype=np.uint8)
-    blank.fill(255)
-
 
     for i in range(num_images):
 
         # first whitespace
-        plate = spacer
+        plate=np.empty(shape=(300,34,3),dtype=np.uint8)
+        plate.fill(255)
 
         label=""
 
@@ -61,18 +54,17 @@ def gen_images(mode,image_scale,image_dir,image_list,num_images,image_format):
 
             image = cv2.imread(os.path.join(letters,letter+'.jpg'))
             plate = np.concatenate((plate,image),axis=1)
-            plate = np.concatenate((plate,spacer),axis=1)
-
+            plate = cv2.copyMakeBorder(plate,0,0,0,34,cv2.BORDER_CONSTANT,value=[255,255,255])
 
         # blank space
-        plate = np.concatenate((plate,blank),axis=1)
+        plate = cv2.copyMakeBorder(plate,0,0,0,120,cv2.BORDER_CONSTANT,value=[255,255,255])
 
         # 3 numbers
         for i in range(3):
             irand = random.randrange(0, 10)
             image = cv2.imread(os.path.join(numbers,str(irand)+'.jpg'))
             plate = np.concatenate((plate,image),axis=1)
-            plate = np.concatenate((plate,spacer),axis=1)
+            plate = cv2.copyMakeBorder(plate,0,0,0,34,cv2.BORDER_CONSTANT,value=[255,255,255])
             label = ''.join((label,str(irand)))
 
         # last 2 letters
@@ -86,15 +78,12 @@ def gen_images(mode,image_scale,image_dir,image_list,num_images,image_format):
 
             image = cv2.imread(os.path.join(letters,letter+'.jpg'))
             plate = np.concatenate((plate,image),axis=1)
-            plate = np.concatenate((plate,spacer),axis=1)
+
+            plate = cv2.copyMakeBorder(plate,0,0,0,34,cv2.BORDER_CONSTANT,value=[255,255,255])
             label = ''.join((label,letter))
 
-        # white border - top & bottom of numbers/letters
-        height, width = plate.shape[:2]
-        horiz_border=np.empty(shape=(100,width,3),dtype=np.uint8)
-        horiz_border.fill(255)
-        plate = np.concatenate((horiz_border,plate),axis=0)
-        plate = np.concatenate((plate,horiz_border),axis=0)
+        # white padding - top & bottom of numbers/letters
+        plate = cv2.copyMakeBorder(plate,100,100,0,0,cv2.BORDER_CONSTANT,value=[255,255,255])
 
         # blue left border
         left = cv2.imread(os.path.join(borders,'left.jpg'))
@@ -119,17 +108,7 @@ def gen_images(mode,image_scale,image_dir,image_list,num_images,image_format):
         # estimate a size for black border
         border = height//25
 
-        # left & right black border
-        vert_border_black=np.empty(shape=(height,border,3),dtype=np.uint8)
-        vert_border_black.fill(0)
-        plate = np.concatenate((vert_border_black,plate),axis=1)
-        plate = np.concatenate((plate,vert_border_black),axis=1)
-
-        # top & bottom black border
-        horiz_border_black=np.empty(shape=(border,width+(2*border),3),dtype=np.uint8)
-        horiz_border_black.fill(0)
-        plate = np.concatenate((horiz_border_black,plate),axis=0)
-        plate = np.concatenate((plate,horiz_border_black),axis=0)
+        plate = cv2.copyMakeBorder(plate,border,border,border,border,cv2.BORDER_CONSTANT,value=[0,0,0])
 
         if mode=='mono':
             plate = cv2.cvtColor(plate, cv2.COLOR_BGR2GRAY)
@@ -142,6 +121,11 @@ def gen_images(mode,image_scale,image_dir,image_list,num_images,image_format):
 
 
     return
+
+
+
+
+
 
 
 # only used if script is run as 'main' from command line
