@@ -8,8 +8,7 @@ import argparse
 import shutil
 
 
-
-def gen_images(image_height,image_width,image_dir,image_list,num_images,image_format):
+def gen_images(mode,image_scale,image_dir,image_list,num_images,image_format):
 
     # make destination directory
     if (os.path.isdir(image_dir)):
@@ -34,12 +33,12 @@ def gen_images(image_height,image_width,image_dir,image_list,num_images,image_fo
     unused = ['i','o','u','q']
 
     # whitespace between characters
-    spacer=np.empty(shape=(300,34,3))
-    spacer.fill(255.0)
+    spacer=np.empty(shape=(300,34,3),dtype=np.uint8)
+    spacer.fill(255)
 
     # whitespace between second letters and first number
-    blank=np.empty(shape=(300,120,3))
-    blank.fill(255.0)
+    blank=np.empty(shape=(300,120,3),dtype=np.uint8)
+    blank.fill(255)
 
 
     for i in range(num_images):
@@ -92,8 +91,8 @@ def gen_images(image_height,image_width,image_dir,image_list,num_images,image_fo
 
         # white border - top & bottom of numbers/letters
         height, width = plate.shape[:2]
-        horiz_border=np.empty(shape=(100,width,3))
-        horiz_border.fill(255.0)
+        horiz_border=np.empty(shape=(100,width,3),dtype=np.uint8)
+        horiz_border.fill(255)
         plate = np.concatenate((horiz_border,plate),axis=0)
         plate = np.concatenate((plate,horiz_border),axis=0)
 
@@ -112,23 +111,28 @@ def gen_images(image_height,image_width,image_dir,image_list,num_images,image_fo
         right = np.concatenate((image_yr,image_prov),axis=0)
         plate = np.concatenate((plate,right),axis=1)
 
-        plate = cv2.resize(plate,(image_width, image_height), interpolation = cv2.INTER_CUBIC)
+        # resize
+        plate = cv2.resize(plate,( int(1860*(image_scale/100)), int(500*(image_scale/100)) ), interpolation = cv2.INTER_LINEAR)
+
+        height,width = plate.shape[:2]
 
         # estimate a size for black border
-        border = image_height//25
+        border = height//25
 
         # left & right black border
-        vert_border_black=np.empty(shape=(image_height,border,3))
-        vert_border_black.fill(0.0)
+        vert_border_black=np.empty(shape=(height,border,3),dtype=np.uint8)
+        vert_border_black.fill(0)
         plate = np.concatenate((vert_border_black,plate),axis=1)
         plate = np.concatenate((plate,vert_border_black),axis=1)
 
-
         # top & bottom black border
-        horiz_border_black=np.empty(shape=(border,image_width+(2*border),3))
-        horiz_border_black.fill(0.0)
+        horiz_border_black=np.empty(shape=(border,width+(2*border),3),dtype=np.uint8)
+        horiz_border_black.fill(0)
         plate = np.concatenate((horiz_border_black,plate),axis=0)
         plate = np.concatenate((plate,horiz_border_black),axis=0)
+
+        if mode=='mono':
+            plate = cv2.cvtColor(plate, cv2.COLOR_BGR2GRAY)
 
         cv2.imwrite(os.path.join(image_dir,label.upper()+'.'+image_format),plate)
 
@@ -144,14 +148,15 @@ def gen_images(image_height,image_width,image_dir,image_list,num_images,image_fo
 def main():
   # construct the argument parser and parse the arguments
   ap = argparse.ArgumentParser()
-  ap.add_argument('-ih', '--image_height',
+  ap.add_argument('-m', '--mode',
+                  type=str,
+                  default='color',
+                  choices=['mono','color'],
+                  help='Save in color or monochrome. Default is color')  
+  ap.add_argument('-s', '--image_scale',
                   type=int,
-                  default=500,
-                  help='Image height in pixels. Default is 500')  
-  ap.add_argument('-iw', '--image_width',
-                  type=int,
-                  default=1860,
-                  help='Image width in pixels. Default is 1860')  
+                  default=100,
+                  help='Image scaling percent. Default is 100.')  
   ap.add_argument('-dir', '--image_dir',
                   type=str,
                   default='image_dir',
@@ -173,16 +178,15 @@ def main():
   args = ap.parse_args()  
   
   print ('Command line options:')
-  print (' --image_height : ', args.image_height)
-  print (' --image_width  : ', args.image_width)
+  print (' --mode         : ', args.mode)
+  print (' --image_scale  : ', args.image_scale)
   print (' --image_dir    : ', args.image_dir)
   print (' --image_list   : ', args.image_list)
   print (' --image_format : ', args.image_format)
   print (' --num_images   : ', args.num_images)
 
 
-  gen_images(args.image_height,args.image_width,args.image_dir, args.image_list, args.num_images, args.image_format)
-
+  gen_images(args.mode, args.image_scale, args.image_dir, args.image_list, args.num_images, args.image_format)
 
 
 if __name__ == '__main__':
