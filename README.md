@@ -13,9 +13,14 @@ Command line options
   + --image_format : jpg = JPEG images, png = PNG images
   + --num_images   : Number of images created
 
-Images should look like this with default options:
+Images should look like this with default options (color, 1950 x 540)
 
 
 
-![plate](./img/MC092SN.png)
+![plate_color](./img/MC092SN.png)
+
+
+The command line python make_plate.py -m mono -s 50 will produce a monochrome image that is 270 x 950 (i.e. scaled down 50%)
+
+![plate_mono](./img/TC111GL.png)
 
